@@ -4,7 +4,6 @@ from typing import Dict, AsyncGenerator, Any
 
 url = 'https://www.dns-shop.ru'
 
-
 async def async_generator_cookies(context: BrowserContext) -> AsyncGenerator[Any, Dict]:
     while True:
         page = await context.new_page()

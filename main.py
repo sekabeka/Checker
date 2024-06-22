@@ -26,12 +26,7 @@ async def main():
         router
     )
     bot = Bot(bot_token)
-
-    async with async_playwright() as p:
-        browser = await p.firefox.launch()
-        contexts = [
-
-        ]
+    
 
 
 
