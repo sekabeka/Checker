@@ -1,8 +1,9 @@
 import requests
+import os
 
 from typing import List, Dict
 
-api_token = "e495563786-43397eca9e-2553afcc35"
+api_token = os.getenv('API_TOKEN')
 
 def get_proxy() -> List[Dict[str, str]]:
     result = []

@@ -1,14 +1,18 @@
 import asyncio
 import aiohttp
+import os
 
+from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 from sites.dns import DnsChecker
 
+load_dotenv()
+
 async def main():
     proxy = {
-        'username' : 'CWH2sr',
-        'password' : 'HR8KMv',
-        'server' : '185.128.213.216:9056'
+        'username' : os.getenv('USERNAME'),
+        'password' : os.getenv('PASSWORD'),
+        'server' : os.getenv('SERVER')
     }
     async with async_playwright() as p:
         browser = await p.firefox.launch()
