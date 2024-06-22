@@ -1,33 +1,37 @@
 import asyncio
-import aiohttp
-import os
+
+from os import getenv
+from aiogram import Dispatcher, Bot
+from playwright.async_api import async_playwright, BrowserContext
+from aiohttp import ClientSession
+from typing import List
+
+from sources.dns.handlers import dns_router
+from bot.handlers import router
 
 from dotenv import load_dotenv
-from playwright.async_api import async_playwright
-from sites.dns import DnsChecker
 
 load_dotenv()
 
+bot_token = getenv('BOT_TOKEN')
+dp = Dispatcher()
+
+
+
+
 async def main():
-    proxy = {
-        'username' : os.getenv('USERNAME'),
-        'password' : os.getenv('PASSWORD'),
-        'server' : os.getenv('SERVER')
-    }
+
+    dp.include_routers(
+        dns_router,
+        router
+    )
+    bot = Bot(bot_token)
+
     async with async_playwright() as p:
         browser = await p.firefox.launch()
-        context = await browser.new_context(
-            proxy=proxy
-        )
-        async with aiohttp.ClientSession() as session:
-            first = DnsChecker(
-                context,
-                'https://www.dns-shop.ru/product/adaa3dcbe745ed20/videokarta-msi-geforce-rtx-3050-lp-oc-geforce-rtx-3050-lp-6g-oc/',
-                session,
-                "http://{}:{}@{}".format(proxy['username'], proxy['password'], proxy['server'])
-            )
-            await first.data()
+        contexts = [
+
+        ]
 
 
 
-asyncio.run(main())
