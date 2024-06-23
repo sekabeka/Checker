@@ -28,6 +28,7 @@ class dns_item:
 class dns_user:
     _id: str
     name: str
+    max_items: int = 5
     tracked_items: List[dns_item] = field(default_factory=list)
 
 @dataclass
