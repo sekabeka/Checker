@@ -24,6 +24,17 @@ async def get_all_users_from_database():
     return users
 
 
+async def clear_similar_items_in_db():
+    pipeline = [
+        {}
+    ]
+    await db['users'].update_many(
+        {},
+        pipeline
+    )
+
+
+
 @dataclass
 class DNS:
     bot: Bot
@@ -68,6 +79,10 @@ class DNS:
                     data_id = soup.find('div', class_='container product-card')['data-product-card']
                     api_url = f"https://www.dns-shop.ru/pwa/pwa/get-product/?id={data_id}"
                     obj['api_url'] = api_url
+                    await db['users'].update_one(
+                        {"data.tracked_items.url": url},
+                        {"$set" : {"data.tracked_items.$.api_url" : api_url}}
+                    )
                     return api_url
                 else:
                     logger.debug('change cookies and proxy in data_id function')
@@ -81,6 +96,10 @@ class DNS:
                     actual_price = data['data']['price']
                     old_price = obj['price']
                     obj['price'] = actual_price
+                    await db['users'].update_one(
+                        {"data.tracked_items.api_url": api_url},
+                        {"$set" : {"data.tracked_items.$.price" : actual_price}}
+                    )
                     if actual_price == old_price:
                         #return None
                         return (old_price, actual_price)
@@ -102,7 +121,7 @@ class DNS:
             async with ClientSession() as session:
                 while True:
                     self.cookies, self.proxy = await self.get_cookies()
-                    for user in await get_all_users_from_database():
+                    async for user in db['users'].find({}):
                         for obj in user['data']['tracked_items']:
                             url = obj['url']
                             api_url = obj['api_url']
