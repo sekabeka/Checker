@@ -1,5 +1,8 @@
 import requests
 import os
+import dotenv
+
+dotenv.load_dotenv()
 
 from typing import List, Dict
 
@@ -10,7 +13,6 @@ def get_proxy() -> List[Dict[str, str]]:
     response = requests.get(
         url=f"https://proxy6.net/api/{api_token}/getproxy"
     )
-    print (response.json())
     for d in response.json()['list'].values():
         result.append({
             'username' : d["user"],

@@ -10,13 +10,11 @@ from dataclasses import dataclass, field
 from aiohttp import ClientSession
 from bs4 import BeautifulSoup
 from typing import List
+from aiogram import Bot
 
 from functions import get_proxy
-from main import bot
 
 logger = logging.getLogger('dns_checker')
-
-
 
 @dataclass
 class dns_item:
@@ -28,15 +26,14 @@ class dns_item:
 class dns_user:
     _id: str
     name: str
-    max_items: int = 5
     tracked_items: List[dns_item] = field(default_factory=list)
 
 @dataclass
 class DNS:
+    bot: Bot
     delay: int = 60
     users: List[dns_user] = field(default_factory=list)
     proxylist: List[dict] = field(default_factory=get_proxy)
-    bot = bot
     
     def set_proxies_for_playwright_and_aiohttp(self):
         self.proxies_for_playwright = [
@@ -90,7 +87,8 @@ class DNS:
                     old_price = obj.price
                     obj.price = actual_price
                     if actual_price == old_price:
-                        return None
+                        #return None
+                        return (old_price, actual_price)
                     else:
                         return (old_price, actual_price)
                 else:
@@ -126,7 +124,6 @@ class DNS:
     
     async def push_message(self, _id: str, url:str, prices: tuple):
         old_price, actual_price = prices
-
         await self.bot.send_message(
             _id,
             **fm.as_list(
@@ -145,7 +142,8 @@ class DNS:
                 fm.as_key_value(
                     fm.Bold('Новая цена'),
                     str(actual_price) + 'руб.'
-                )
+                ),
+                sep='\n\n'
             ).as_kwargs()
         )
 

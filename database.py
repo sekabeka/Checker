@@ -1,6 +1,6 @@
-from pymongo import MongoClient
-from pymongo.database import Database
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
-client: MongoClient = MongoClient()
-db: Database = client['checker']
+
+client: AsyncIOMotorClient = AsyncIOMotorClient()
+db: AsyncIOMotorDatabase = client['checker']
 
