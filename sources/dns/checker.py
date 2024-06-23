@@ -13,26 +13,21 @@ from typing import List
 from aiogram import Bot
 
 from functions import get_proxy
+from database import db
 
 logger = logging.getLogger('dns_checker')
 
-@dataclass
-class dns_item:
-    url: str
-    price: int = 0
-    api_url: str = None
+async def get_all_users_from_database():
+    users = [
+        user async for user in (await db['users'].find({}))
+    ]
+    return users
 
-@dataclass
-class dns_user:
-    _id: str
-    name: str
-    tracked_items: List[dns_item] = field(default_factory=list)
 
 @dataclass
 class DNS:
     bot: Bot
     delay: int = 60
-    users: List[dns_user] = field(default_factory=list)
     proxylist: List[dict] = field(default_factory=get_proxy)
     
     def set_proxies_for_playwright_and_aiohttp(self):
@@ -65,27 +60,27 @@ class DNS:
                 await page.close()
                 return cookies, self.proxies_for_aiohttp[idx]
 
-    async def work_with_data_id(self, url: str, obj: dns_item, session: ClientSession):
+    async def work_with_data_id(self, url: str, obj: dict, session: ClientSession):
         while True:
             async with session.get(url, cookies=self.cookies, proxy=self.proxy) as response:
                 if response.ok:
                     soup = BeautifulSoup(await response.text(), 'lxml')
                     data_id = soup.find('div', class_='container product-card')['data-product-card']
                     api_url = f"https://www.dns-shop.ru/pwa/pwa/get-product/?id={data_id}"
-                    obj.api_url = api_url
+                    obj['api_url'] = api_url
                     return api_url
                 else:
                     logger.debug('change cookies and proxy in data_id function')
             self.cookies, self.proxy = await self.get_cookies()
 
-    async def work_with_api_url(self, api_url: str, obj: dns_item, session: ClientSession):
+    async def work_with_api_url(self, api_url: str, obj: dict, session: ClientSession):
         while True:
             async with session.get(api_url, cookies=self.cookies, proxy=self.proxy) as response:
                 if response.ok:
                     data = await response.json()
                     actual_price = data['data']['price']
-                    old_price = obj.price
-                    obj.price = actual_price
+                    old_price = obj['price']
+                    obj['price'] = actual_price
                     if actual_price == old_price:
                         #return None
                         return (old_price, actual_price)
@@ -107,17 +102,17 @@ class DNS:
             async with ClientSession() as session:
                 while True:
                     self.cookies, self.proxy = await self.get_cookies()
-                    for user in self.users:
-                        for obj in user.tracked_items:
-                            url = obj.url
-                            api_url = obj.api_url
+                    for user in await get_all_users_from_database():
+                        for obj in user['data']['tracked_items']:
+                            url = obj['url']
+                            api_url = obj['api_url']
                             if api_url is None:
                                 api_url = await self.work_with_data_id(url, obj, session)
                             result = await self.work_with_api_url(api_url, obj, session)
                             if result is not None:
-                                await self.push_message(user._id, url, result)
+                                await self.push_message(user['data']['id'], url, result)
                             await asyncio.sleep(random.randint(1, 2))
-                        logger.debug('we send all messages for {}'.format(user.name))
+                        logger.debug('we send all messages for {}'.format(user['data']['name']))
                     logger.debug('we send all messages. sleeping {} seconds...'.format(self.delay))
 
                     await asyncio.sleep(self.delay)
@@ -137,11 +132,11 @@ class DNS:
                 ),
                 fm.as_key_value(
                     fm.Bold('Старая цена'),
-                    str(old_price) + 'руб.'
+                    str(old_price) + ' руб.'
                 ),
                 fm.as_key_value(
                     fm.Bold('Новая цена'),
-                    str(actual_price) + 'руб.'
+                    str(actual_price) + ' руб.'
                 ),
                 sep='\n\n'
             ).as_kwargs()
