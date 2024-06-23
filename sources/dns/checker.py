@@ -14,26 +14,11 @@ from aiogram import Bot
 
 from functions import get_proxy
 from database import db
+from bot.keyboards import (
+    get_delete_keyboard
+)
 
 logger = logging.getLogger('dns_checker')
-
-async def get_all_users_from_database():
-    users = [
-        user async for user in (await db['users'].find({}))
-    ]
-    return users
-
-
-async def clear_similar_items_in_db():
-    pipeline = [
-        {}
-    ]
-    await db['users'].update_many(
-        {},
-        pipeline
-    )
-
-
 
 @dataclass
 class DNS:
@@ -138,6 +123,8 @@ class DNS:
     
     async def push_message(self, _id: str, url:str, prices: tuple):
         old_price, actual_price = prices
+        if old_price == 0:
+            return
         await self.bot.send_message(
             _id,
             **fm.as_list(
@@ -158,7 +145,8 @@ class DNS:
                     str(actual_price) + ' руб.'
                 ),
                 sep='\n\n'
-            ).as_kwargs()
+            ).as_kwargs(),
+            reply_markup=get_delete_keyboard(url)
         )
 
     

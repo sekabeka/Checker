@@ -5,6 +5,7 @@ from aiogram.fsm.context import FSMContext
 
 from database import db
 
+
 dns_router = Router()
 
 async def write_user_in_db(_id: int, fullname: str, cl_name: str = 'users') -> None:
@@ -42,8 +43,22 @@ async def add_url(message: Message, state: FSMContext) -> None:
             }
         )  
     tracked_items: list = (await state.get_data())['tracked_items']
+    if len(tracked_items) > 5:
+        await message.answer(
+            'У вас максимальное количество отслеживаемых товаров.'
+        )
+        return
+    exist_urls = set(
+        [
+            item['url'] for item in tracked_items
+        ]
+    )
+    message_url = message.text
+    if message_url in exist_urls:
+        await message.answer('Такая ссылка уже отслеживается.')
+        return
     tracked_items.append({
-        'url' : message.text,
+        'url' : message_url,
         'price' : 0,
         'api_url' : None
     })
@@ -51,6 +66,8 @@ async def add_url(message: Message, state: FSMContext) -> None:
     await state.update_data({
         'tracked_items' : tracked_items
     })
+
+
 
 
 

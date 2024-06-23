@@ -7,6 +7,7 @@ from aiogram import Dispatcher, Bot
 from aiogram.fsm.storage.mongo import MongoStorage
 
 from sources.dns.handlers import dns_router
+from bot.handlers import router
 from sources.dns.checker import DNS
 from database import client
 
@@ -23,12 +24,17 @@ dp = Dispatcher(storage=storage)
 
 
 async def main():
-    bot = Bot(bot_token)
-    dp.include_routers(
-        dns_router,
-    )
-    dns_checker = DNS(bot)
-    asyncio.create_task(dns_checker.parse())
-    await dp.start_polling(bot)
+    try:
+        bot = Bot(bot_token)
+        dp.include_routers(
+            dns_router,
+            router
+        )
+        dns_checker = DNS(bot)
+        task = asyncio.create_task(dns_checker.parse())
+        await dp.start_polling(bot)
+    except KeyboardInterrupt:
+        task.cancel()
+        
     
 asyncio.run(main())
