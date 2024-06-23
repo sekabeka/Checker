@@ -15,7 +15,7 @@ from aiogram import Bot
 from functions import get_proxy
 from database import db
 from bot.keyboards import (
-    get_delete_keyboard
+    get_item_keyboard
 )
 
 logger = logging.getLogger('dns_checker')
@@ -146,7 +146,7 @@ class DNS:
                 ),
                 sep='\n\n'
             ).as_kwargs(),
-            reply_markup=get_delete_keyboard(url)
+            reply_markup=get_item_keyboard(url)
         )
 
     

@@ -49,19 +49,25 @@ async def get_user_tasks(message: Message, state: FSMContext):
 async def delete_task_from_user(message: Message, state: FSMContext):
     pass
 
-@router.callback_query(F.data.startswith('http'))
+@router.callback_query(F.data == 'delete')
 async def delete_tracked_item(query: CallbackQuery, state: FSMContext):
     data = await state.get_data()
+    markup = query.message.reply_markup
+    buttons = [i for j in markup.inline_keyboard for i in j]
+    for btn in buttons:
+        if btn.url is not None:
+            url = btn.url
+            break
     tracked_items = data['tracked_items']
     new_tracked_items = []
     for item in tracked_items:
-        if query.data == item['url']:
+        if url == item['url']:
             continue
         new_tracked_items.append(item)
     await state.update_data({
         'tracked_items' : new_tracked_items
     })
-    query.message.edit_reply_markup(reply_markup=None)
+    await query.message.delete()
     await query.message.answer('Запрос успешно удален.')
     await query.answer(None)
 

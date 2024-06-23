@@ -1,5 +1,6 @@
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
+
 def get_item_keyboard(url: str) -> InlineKeyboardMarkup:
     item_keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
@@ -12,7 +13,7 @@ def get_item_keyboard(url: str) -> InlineKeyboardMarkup:
             [
                 InlineKeyboardButton(
                     text='Remove this product',
-                    callback_data=''
+                    callback_data='delete'
                 )
             ]
         ]

@@ -24,7 +24,7 @@ async def add_item_for_tracking(_id: int, item: dict, cl_name: str = 'users'):
             {'$push' : {'tracked_items' : item}}
         )
 
-@dns_router.message()
+@dns_router.message(F.text.contains('dns-shop'))
 async def add_url(message: Message, state: FSMContext) -> None:
     user = message.from_user
     _id = user.id
@@ -43,7 +43,7 @@ async def add_url(message: Message, state: FSMContext) -> None:
             }
         )  
     tracked_items: list = (await state.get_data())['tracked_items']
-    if len(tracked_items) > 5:
+    if len(tracked_items) >= 5:
         await message.answer(
             'У вас максимальное количество отслеживаемых товаров.'
         )
